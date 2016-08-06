@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+
+export PGHOST PGPORT PGDATABASE PGUSER PGPASSWORD
+
+cd $(dirname $0)
+source include/pgschema.sh
+
+usage() {
+  cat <<EOF
+${0} [-h] [-dryrun] -all|-through|-until|-next
+
+  -h            display this help message
+  -dryrun       don't execute selected schema migrations
+  -all          select all (remaining) up migrations
+  -through NUM  select all up migrations up to and including NUM
+  -until   NUM  select all up migrations up to NUM
+  -next         select only the next single up migration
+EOF
+  exit 0
+}
+
+
+# usage string on -h
+if havearg -h $@; then
+  usage
+fi
+
+
+# set DRYRUN to avoid actually running any schemas
+if havearg -dryrun $@; then
+  export DRYRUN=1
+fi
+
+
+# set the start schema based on the current schema_state
+if ! query '\d' | grep -q schema_state; then
+  current="0"
+else
+  current="$(query 'SELECT current FROM schema_state')"
+fi
+next="$(($current+1))"
+
+
+# set the end schema based on cmdline args
+if havearg -all $@; then
+  scripts="$(seq $next 99 | existingfiles up)"
+
+elif havearg -through $@; then
+  through="$(argval -through $@)"
+  scripts="$(seq $next $through | existingfiles up)"
+
+elif havearg -until $@; then
+  until="$(argval -until $@)"
+  scripts="$(seq $next $(($until-1)) | existingfiles up)"
+
+elif havearg -next $@; then
+  scripts="$(seq $next 99 | existingfiles up | head -n1)"
+
+else
+  usage
+fi
+
+
+# send all the collected SQL into the DB
+for script in $scripts; do
+  migrate $script up
+done
+if [ -z "$scripts" ]; then
+  echo "nothing to migrate"
+fi
