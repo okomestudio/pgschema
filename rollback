@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -e
+
+export PGHOST PGPORT PGDATABASE PGUSER PGPASSWORD
+
+cd $(dirname $0)
+
+source include/pgschema.sh
+
+usage() {
+  cat <<EOF
+${0} [-h] [-dryrun] -all|-through|-until|-next
+
+  -h           display this help message
+  -dryrun      don't execute selected migrations
+  -all         select all (remaining) down migrations
+  -through NUM select all down migrations to and including NUM
+  -until   NUM select all down migrations to, but not including NUM
+  -next        select only the current down migration
+EOF
+  exit 0
+}
+
+
+# usage string on -h
+if havearg -h $@; then
+  usage
+fi
+
+
+# set DRYRUN to opt-out of executing schemas
+if havearg -dryrun $@; then
+  export DRYRUN=1
+fi
+
+
+# set the start schema based on the current schema_state
+if ! query '\d' | grep -q schema_state; then
+  current="0"
+else
+  current="$(query 'SELECT current FROM schema_state')"
+fi
+next="$current"
+
+
+# set the start schema based on cmdline args
+if havearg -all $@; then
+  scripts="$(seq $next -1 1 | existingfiles down)"
+
+elif havearg -through $@; then
+  through="$(argval -through $@)"
+  scripts="$(seq $next -1 $through | existingfiles down)"
+
+elif havearg -until $@; then
+  until="$(argval -until $@)"
+  scripts="$(seq $next -1 $(($until+1)) | existingfiles down)"
+
+elif havearg -next $@; then
+  scripts="$(seq $next -1 1 | existingfiles down | head -n1)"
+
+else
+  usage
+fi
+
+
+# run (or dryrun) the selected migrations
+for script in $scripts; do
+  migrate $script down
+done
+if [ -z "$scripts" ]; then
+  echo "nothing to rollback"
+fi
