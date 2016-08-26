@@ -5,11 +5,11 @@
 # them to be run before/after every individual test.
 
 setup() {
-  # use these environment variables to connect to postgres
+  # Use these environment variables to connect to postgres.
   export PGHOST PGPORT PGUSER PGPASSWORD
   export PGDATABASE="$(head -c9 /dev/urandom | base64)"
 
-  # create a new database with a nice random name
+  # Create a new database with a nice random name.
   createdb $PGDATABASE
 }
 
@@ -18,27 +18,27 @@ teardown() {
 }
 
 
-# test that the schema is unchanged by a given ($1) up-and-down
+# Test that the schema is unchanged by a given ($1) up-and-down.
 test_up_and_down() {
-  # go to the schema right before applying $1 and record the schema
+  # Go to the schema right before applying $1 and record the schema.
   run ./update -until "$1"
   START_SCHEMA="$(mktemp)"
   show_schema >$START_SCHEMA
 
-  # go up and back down for the tested schema
+  # Go up and back down for the tested schema.
   run ./update -next
   run ./rollback -next
 
-  # compare the resulting schema with the recorded one
+  # Compare the resulting schema with the recorded one.
   diff $START_SCHEMA <(show_schema)
   result=$?
 
-  # clean up and return the appropriate error code
+  # Clean up and return the appropriate error code.
   rm $START_SCHEMA
   return $result
 }
 
-# dump a representation of the schema
+# Dump a representation of the schema.
 show_schema() {
   PGDATABASE=${PGDATABASE-public}
 
@@ -94,42 +94,42 @@ EOF
   done
 }
 
-# test that a table ($1) exists in the schema
+# Test that a table ($1) exists in the schema.
 table_exists() {
   psql -Atc '\d' | cut -d\| -f2,3 | grep -Eq "^$1\|table$"
 }
 
-# test that a table ($1) exists in the attic schema
+# Test that a table ($1) exists in the attic schema.
 attic_table_exists() {
   psql -Atc '\dt attic.*' | cut -d\| -f2,3 | grep -Eq "^$1\|table$"
 }
 
-# test that a type ($1) exists in the schema
+# Test that a type ($1) exists in the schema.
 type_exists() {
   psql -Atc '\dT' | cut -d\| -f2 | grep -Eq "^$1$"
 }
 
-# test that a column ($2) exists on a table ($1)
+# Test that a column ($2) exists on a table ($1).
 column_exists() {
   psql -Atc "\\d $1" | cut -d\| -f1 | grep -Eq "^$2$"
 }
 
-# test that a column ($2) on a table ($1) has a default value ($3)
+# Test that a column ($2) on a table ($1) has a default value ($3).
 column_has_default() {
   psql -Atc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|default $3"
 }
 
-# test that a column ($2) on a table ($1) has constraint ($3)
+# Test that a column ($2) on a table ($1) has constraint ($3).
 column_has_constraint() {
   psql -Atc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|$3"
 }
 
-# test that a table ($1) has a row that satisfies clause ($2)
+# Test that a table ($1) has a row that satisfies clause ($2).
 row_exists() {
   test "$(psql -Atc "SELECT COUNT(*) FROM $1 WHERE $2;")" != "0"
 }
 
-# test that a table ($1) has N ($2) records
+# Test that a table ($1) has N ($2) records.
 n_rows_exist() {
   test "$(psql -Atc "SELECT COUNT(*) FROM $1;")" == "$2"
 }
