@@ -134,6 +134,7 @@ n_rows_exist() {
   test "$(psql -Atc "SELECT COUNT(*) FROM $1;")" == "$2"
 }
 
+# Test that an index ($1) exists.
 index_exists() {
   psql -Atc "\\di $1" | grep -q "|$1|"
 }
