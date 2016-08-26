@@ -137,3 +137,8 @@ n_rows_exist() {
 index_exists() {
   psql -Atc "\\di $1" | grep -q "|$1|"
 }
+
+# Test that a function ($1) exists.
+function_exists() {
+  psql -Atc "\\df $1" | grep -q "|$1|"
+}
