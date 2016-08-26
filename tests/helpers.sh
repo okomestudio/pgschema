@@ -1,8 +1,8 @@
+###############################################################################
+# Bats PostgreSQL migration test helpers
 #
-# no need to call setup or teardown explicitly,
-# their presence causes them to be run before/after
-# every individual test.
-#
+# No need to call setup or teardown explicitly; their presence causes
+# them to be run before/after every individual test.
 
 setup() {
   # use these environment variables to connect to postgres
