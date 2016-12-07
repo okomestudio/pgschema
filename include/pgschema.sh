@@ -34,7 +34,7 @@ argval() {
 
 
 query() {
-  psql -Atc "$1"
+  psql -Atqc "$1"
 }
 
 
