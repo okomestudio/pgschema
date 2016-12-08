@@ -96,50 +96,50 @@ EOF
 
 # Test that a table ($1) exists in the schema.
 table_exists() {
-  psql -Atc '\d' | cut -d\| -f2,3 | grep -Eq "^$1\|table$"
+  psql -Atqc '\d' | cut -d\| -f2,3 | grep -Eq "^$1\|table$"
 }
 
 # Test that a table ($1) exists in the attic schema.
 attic_table_exists() {
-  psql -Atc '\dt attic.*' | cut -d\| -f2,3 | grep -Eq "^$1\|table$"
+  psql -Atqc '\dt attic.*' | cut -d\| -f2,3 | grep -Eq "^$1\|table$"
 }
 
 # Test that a type ($1) exists in the schema.
 type_exists() {
-  psql -Atc '\dT' | cut -d\| -f2 | grep -Eq "^$1$"
+  psql -Atqc '\dT' | cut -d\| -f2 | grep -Eq "^$1$"
 }
 
 # Test that a column ($2) exists on a table ($1).
 column_exists() {
-  psql -Atc "\\d $1" | cut -d\| -f1 | grep -Eq "^$2$"
+  psql -Atqc "\\d $1" | cut -d\| -f1 | grep -Eq "^$2$"
 }
 
 # Test that a column ($2) on a table ($1) has a default value ($3).
 column_has_default() {
-  psql -Atc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|default $3"
+  psql -Atqc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|default $3"
 }
 
 # Test that a column ($2) on a table ($1) has constraint ($3).
 column_has_constraint() {
-  psql -Atc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|$3"
+  psql -Atqc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|$3"
 }
 
 # Test that a table ($1) has a row that satisfies clause ($2).
 row_exists() {
-  test "$(psql -Atc "SELECT COUNT(*) FROM $1 WHERE $2;")" != "0"
+  test "$(psql -Atqc "SELECT COUNT(*) FROM $1 WHERE $2;")" != "0"
 }
 
 # Test that a table ($1) has N ($2) records.
 n_rows_exist() {
-  test "$(psql -Atc "SELECT COUNT(*) FROM $1;")" == "$2"
+  test "$(psql -Atqc "SELECT COUNT(*) FROM $1;")" == "$2"
 }
 
 # Test that an index ($1) exists.
 index_exists() {
-  psql -Atc "\\di $1" | grep -q "|$1|"
+  psql -Atqc "\\di $1" | grep -q "|$1|"
 }
 
 # Test that a function ($1) exists.
 function_exists() {
-  psql -Atc "\\df $1" | grep -q "|$1|"
+  psql -Atqc "\\df $1" | grep -q "|$1|"
 }
