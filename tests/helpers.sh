@@ -124,6 +124,19 @@ column_has_constraint() {
   psql -Atqc "\\d $1" | cut -d\| -f1,3 | grep -q "$2|$3"
 }
 
+# Test that a contraint ($2) exists for a table ($1).
+table_has_constraint() {
+  test "$(psql -Atq <<EOF
+SELECT
+  COUNT(*)
+FROM
+  information_schema.table_constraints
+WHERE
+  table_name = '$1' AND constraint_name = '$2';
+EOF
+)" != "0"
+}
+
 # Test that a table ($1) has a row that satisfies clause ($2).
 row_exists() {
   test "$(psql -Atqc "SELECT COUNT(*) FROM $1 WHERE $2;")" != "0"
